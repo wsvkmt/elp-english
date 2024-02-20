@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id            String    @id @default(cuid()) // 기본 키로 autoincrement 사용
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  answers       Answer[]
+}
+
+model Teacher {
+  id            String    @id @default(cuid()) // 기본 키로 autoincrement 사용
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Book {
+  title     String // 책 제목
+  level     Int // K-12 단계
+  questions Question[] // 책에 대해 생성된 질문들
+  id        String     @id @default(cuid()) // 기본 키로 autoincrement 사용
+  text      String // 책 텍스트
+}
+
+model Question {
+  taxonomy     Int // bloom taxonomy 6단계를 의미
+  LLM          String // 문제를 생성한 LLM을 의미
+  stemType     Int // 1-1인지, 2-1인지.
+  introduction String // 생성된 발문
+  bookId       String
+  book         Book     @relation(fields: [bookId], references: [id])
+  id           String   @id @default(cuid()) // 기본 키로 autoincrement 사용
+  answers      Answer[] // 문제에 대한 학생들의 답변들
+}
+
+model Answer {
+  id           String   @id @default(cuid()) // 기본 키로 autoincrement 사용
+  answerText   String // 학생의 풀이 내용
+  studentId    String // 학생 ID 외래 키
+  questionId   String // 문제 ID 외래 키
+  congruency   Int // 문제의 의도에 대한 답안의 적합성, Remember과 Understanding, 2개의 초기 단계는 0, 1 의 값만 가질 수 있고, 나머지 4단계는 0, 1, 2의 값을 가질 수 있다.
+  coherency    Int // 전달하고자 하는 의도의 명확성, Remember과 Understanding, 2개의 초기 단계는 0, 1 의 값만 가질 수 있고, 나머지 4단계는 0, 1, 2의 값을 가질 수 있다.
+  completeness Int // 질문이 요구하는 정보의 완벽성, Remember과 Understanding, 2개의 초기 단계는 0, 1 의 값만 가질 수 있고, 나머지 4단계는 0, 1, 2의 값을 가질 수 있다.
+  student      Student  @relation(fields: [studentId], references: [id])
+  question     Question @relation(fields: [questionId], references: [id])
+}
